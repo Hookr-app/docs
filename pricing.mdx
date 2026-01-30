@@ -1,0 +1,87 @@
+---
+title: 'Pricing & Credits'
+description: 'Understand our freemium model, credit system, and affordable Pro plan for business use'
+---
+
+## Overview
+
+Hookr uses a credit-based system where each webhook invocation consumes credits. We offer both a free plan for casual use and an affordable Pro plan for business needs.
+
+## Plans
+
+### Free Plan
+
+Perfect for casual, non-business usage.
+
+**Included credits:** 200 credits per month  
+**Estimated usage:** ~6-7 invocations per day (based on 30-day month)
+
+The Free plan is designed for personal projects, testing, and occasional webhook usage. You can use your 200 monthly credits at any pace - all at once or distributed throughout the month - giving you complete flexibility.
+
+### Pro Plan
+
+For users who want to use Hookr in their business activities.
+
+**Price:** Affordable monthly subscription  
+**Included credits:** 3,000 credits per month  
+**Estimated usage:** ~100 invocations per day (based on 30-day month)
+
+The Pro plan is ideal for businesses that need reliable, high-volume webhook processing. You can use your 3,000 monthly credits at any pace - all at once or distributed throughout the month - giving you complete flexibility.
+
+## Credit System
+
+### How Credits Work
+
+**Base cost:** 1 credit per webhook invocation
+
+Each time a webhook is triggered, it costs 1 credit. If you've configured the webhook to forward to additional destinations, you'll be charged an additional credit for each destination.
+
+**Cost formula:**
+```
+Total credits = 1 + (number of forwarding destinations)
+```
+
+### Examples
+
+- Single webhook with no forwarding: **1 credit**
+- Webhook forwarded to 1 additional destination: **2 credits**
+- Webhook forwarded to 3 additional destinations: **4 credits**
+
+### Credit Requirements
+
+Your account must have sufficient credits before a webhook is executed. If your account doesn't have enough credits remaining, the webhook won't be processed.
+
+## Choosing the Right Plan
+
+<CardGroup cols={2}>
+  <Card title="Free Plan" icon="gift">
+    Choose this if you:
+    - Use webhooks for personal projects
+    - Need occasional webhook processing
+    - Process up to 200 webhooks per month
+    - Are testing or learning webhooks
+  </Card>
+  
+  <Card title="Pro Plan" icon="briefcase">
+    Choose this if you:
+    - Run a business that relies on webhooks
+    - Need high-volume processing
+    - Process up to 3,000 webhooks per month
+    - Require predictable monthly costs
+  </Card>
+</CardGroup>
+
+## Frequently Asked Questions
+
+### What happens when I run out of credits?
+
+When your account doesn't have enough credits, webhooks won't be processed. You'll need to upgrade to the Pro plan or wait for your monthly credit allocation to reset.
+
+### Do unused credits roll over?
+
+- **Free plan:** Monthly credits do not roll over. You receive 200 new credits on your registration anniversary each month (e.g., if you registered on January 15th, credits reset on February 15th, March 15th, etc.).
+- **Pro plan:** Monthly credits do not roll over. You receive 3,000 new credits on your billing date each month.
+
+### Can I forward webhooks on the Free plan?
+
+Yes, but remember that forwarding consumes additional credits. Each forwarding destination costs 1 extra credit per invocation.

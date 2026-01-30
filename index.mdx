@@ -1,97 +1,166 @@
 ---
 title: "Introduction"
-description: "Welcome to the new home for your documentation"
+description: "Receive webhooks and get instant push notifications on your phone. Learn how Hookr works and get started."
 ---
 
-## Setting up
+## What is Hookr?
 
-Get your documentation site up and running in minutes.
+Hookr is a webhook receiver that sends you push notifications directly to your phone. Think of it like a mail carrier who doesn't just deliver your packages—they read what's inside and call you immediately to let you know it arrived.
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+Instead of building and maintaining your own server to receive webhooks from external services, you create a unique webhook URL in Hookr. When events happen—a payment processes, an order ships, your infrastructure alerts—the service sends an HTTP request to your Hookr URL, and you get an instant 🔔 notification on your iOS or Android device.
 
-## Make it yours
+Hookr eliminates the gap between webhook sources and the people who need to know about them *right now*.
 
-Design a docs site that looks great and empowers your users.
+## How it works
+
+Getting started takes just three steps:
+
+1. **Create a webhook** — Generate a unique HTTPS URL in Hookr that external services can send requests to.
+
+2. **External service sends a request** — Any service that supports webhooks (payment processors, form builders, monitoring tools, etc.) sends an HTTP GET or POST request to your Hookr URL with event data.
+
+3. **You get instant notification** — Hookr receives the request, sends you a push notification on your phone with the event details, and optionally forwards the data to other services (Zapier, Make, or custom APIs).
+
+That's it. No servers to manage, no complex infrastructure—just instant notifications.
+
+## Core features
+
+Everything you need to receive and act on webhooks:
 
 <Columns cols={2}>
   <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
+    title="Webhooks"
+    icon="webhook"
+    href="/essentials/webhooks"
   >
-    Edit your docs locally and preview them in real time.
+    Create unique receiver URLs that accept HTTP requests and trigger notifications.
   </Card>
   <Card
-    title="Customize your site"
-    icon="palette"
+    title="Events"
+    icon="history"
+    href="/essentials/events"
+  >
+    View complete history of all incoming requests with full details and forwarding status.
+  </Card>
+  <Card
+    title="Settings"
+    icon="gear"
     href="/essentials/settings"
   >
-    Customize the design and colors of your site to match your brand.
-  </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+    Customize notification timing, quiet hours, active days, and subscription preferences.
   </Card>
 </Columns>
 
-## Create beautiful pages
+## Advanced capabilities
 
-Everything you need to create world-class documentation.
+Take control of your webhooks with powerful optional features:
 
 <Columns cols={2}>
   <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
+    title="Forwarding & Proxying"
+    icon="arrow-right"
+    href="/features/forwarding-proxying"
   >
-    Use MDX to style your docs pages.
+    Relay webhooks to up to 3 external services with automatic HMAC signature verification.
   </Card>
   <Card
-    title="Code samples"
+    title="Private Mode"
+    icon="lock"
+    href="/features/private-mode"
+  >
+    Automatically delete raw payloads after processing to keep sensitive data private.
+  </Card>
+  <Card
+    title="Time-Sensitive Notifications"
+    icon="bell"
+    href="/features/time-sensitive"
+  >
+    Critical alerts break through Do Not Disturb and Focus modes on iOS 15.0+.
+  </Card>
+  <Card
+    title="Handlebars Templates"
     icon="code"
-    href="/essentials/code"
+    href="/features/handlebars"
   >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
+    Create dynamic notification titles and messages using data from incoming events.
   </Card>
 </Columns>
 
-## Need inspiration?
+## Real-world use cases
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+### Payment alerts
+
+A payment processor sends a webhook when a transaction completes:
+
+```json
+{
+  "event": "payment.success",
+  "amount": 9999,
+  "currency": "USD",
+  "customer": "john@example.com",
+  "timestamp": "2025-01-30T14:32:00Z"
+}
+```
+
+Hookr sends you an instant notification: "💳 Payment received: $99.99 from john@example.com"
+
+### Order status updates
+
+Your e-commerce platform notifies you when orders ship:
+
+```json
+{
+  "event": "order.shipped",
+  "order_id": "ORD-12345",
+  "tracking_url": "https://carrier.com/track/xyz",
+  "customer": "Jane Smith"
+}
+```
+
+You get: "📦 Order ORD-12345 shipped—Jane Smith can track here."
+
+### Infrastructure monitoring
+
+Your server monitoring tool alerts on critical issues:
+
+```json
+{
+  "alert": "high_cpu",
+  "server": "api-prod-01",
+  "cpu_usage": 94.2,
+  "timestamp": "2025-01-30T14:45:00Z"
+}
+```
+
+Immediate notification: "⚠️ api-prod-01 CPU at 94.2%—take action now."
+
+## Get started
+
+Choose your next step:
+
+<Columns cols={2}>
+  <Card
+    title="Create your first webhook"
+    icon="rocket"
+    href="/essentials/webhooks"
+    horizontal
+  >
+    Walk through creating a webhook receiver and testing it with a request.
+  </Card>
+  <Card
+    title="View pricing & limits"
+    icon="credit-card"
+    href="/pricing"
+    horizontal
+  >
+    Understand the credit system, rate limits, and plan options.
+  </Card>
+  <Card
+    title="Know the limitations"
+    icon="info"
+    href="/limitations"
+    horizontal
+  >
+    Learn about payload size, forwarding destinations, and data retention.
+  </Card>
+</Columns>

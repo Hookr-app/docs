@@ -1,0 +1,146 @@
+---
+title: 'Time Sensitive Notifications'
+description: 'Enable critical webhooks to break through Do Not Disturb and Focus modes for immediate delivery'
+---
+
+## Overview
+
+Time Sensitive is a notification priority feature that ensures your most critical webhook alerts reach you immediately, even when your device is in Do Not Disturb mode or an active Focus mode. When enabled on a webhook, notifications will bypass your configured silence windows and deliver with full priority and sound.
+
+This feature is designed for time-critical events that demand immediate attention, such as server outages, security incidents, payment failures, or urgent operational alerts.
+
+---
+
+## When to Use Time Sensitive
+
+Time Sensitive should be reserved for genuinely urgent notifications that require immediate user action or awareness.
+
+### ✅ Good Use Cases
+
+| Scenario | Example |
+|----------|---------|
+| **Critical Infrastructure** | Server downtime, database failures, API outages |
+| **Security Incidents** | Unauthorized access attempts, suspicious login locations, breach alerts |
+| **Payment & Billing** | Failed payment attempts, refund confirmations, subscription cancellations |
+| **Operational Emergencies** | System quota exceeded, backup failures, resource limits approaching |
+| **Time-Bound Events** | Limited-time offers, auction closing, appointment reminders requiring action |
+| **Urgent Requests** | High-priority support tickets, compliance deadline warnings, escalated issues |
+
+### ❌ Poor Use Cases
+
+| Scenario | Why Not Time Sensitive |
+|----------|------------------------|
+| **Routine Updates** | Daily reports, scheduled summaries, analytics digests |
+| **Informational Content** | New comments, social updates, general news, status changes |
+| **Bulk Notifications** | Marketing campaigns, newsletters, batch announcements |
+| **Testing/Development** | Test events should use standard delivery to avoid notification fatigue |
+
+---
+
+## How It Works
+
+When you enable Time Sensitive on a webhook:
+
+| Your Setting | Standard Notification | Time Sensitive Notification |
+|--------------|----------------------|----------------------------|
+| **Do Not Disturb active** | Silenced | ✅ Breaks through with sound |
+| **Focus mode active** | Silenced | ✅ Interrupts with high priority |
+| **Silence window configured** | Silenced during window | ✅ Bypasses silence window |
+| **Day-of-week disabled** | Silenced on that day | Silenced on that day |
+
+**Important:** Time Sensitive notifications still respect your day-of-week settings. If you've disabled notifications for a specific day, Time Sensitive webhooks will also be silenced on that day.
+
+---
+
+## Setup: Enabling Time Sensitive
+
+Enabling Time Sensitive is simple:
+
+1. **Open your webhook** — Find the webhook you want to make time sensitive
+2. **Edit the webhook** — Click the edit button or settings
+3. **Toggle Time Sensitive** — Look for the **Time Sensitive** checkbox and enable it
+4. **Review platform requirements** — Ensure your device meets the requirements (iOS 15.0+ with permission, or Android with high-priority support)
+5. **Save your webhook** — The setting takes effect immediately for future events
+
+Once enabled, a **clock icon badge** (⏱️) appears next to your webhook name so you can quickly identify which webhooks have Time Sensitive enabled.
+
+### Before You Enable Time Sensitive
+
+1. ✅ **Verify it's truly urgent** — Only enable for events that require immediate attention
+2. ✅ **Check iOS requirements** — If using iOS, ensure you have iOS 15.0+ and have granted the "Time Sensitive Alerts" permission
+3. ✅ **Test the notification** — Send a test event to verify it breaks through Do Not Disturb
+4. ✅ **Monitor notification frequency** — Avoid enabling on high-volume webhooks that could cause notification fatigue
+
+---
+
+## Requirements
+
+### iOS
+
+- **iOS Version:** 15.0 or later (required for Time Sensitive feature)
+- **User Permission:** You must grant "Time Sensitive Alerts" permission in iOS Settings:
+  - Go to **Settings → Notifications → Hookr → Time Sensitive Alerts**
+  - Toggle **Allow** to enable
+
+Without this permission, Time Sensitive notifications will be delivered as standard notifications and will respect Do Not Disturb settings.
+
+### Android
+
+Android does not have a direct equivalent to iOS Time Sensitive. Time Sensitive webhooks on Android are delivered as high-priority notifications using the standard importance system. They will generally override Do Not Disturb settings but behavior may vary by device manufacturer.
+
+---
+
+## Troubleshooting
+
+### Notifications Still Respect Do Not Disturb
+
+**Problem:** Time Sensitive is enabled, but notifications don't break through DND.
+
+**Solutions:**
+1. Verify you've granted "Time Sensitive Alerts" permission in iOS Settings → Notifications → Hookr
+2. Check your iOS version is 15.0 or later
+3. Confirm the webhook has the Time Sensitive checkbox checked and saved
+4. Look for the ⏱️ badge in your webhook list to verify it's enabled
+5. Check the notification preview for the red TIME SENSITIVE label
+
+---
+
+### Permission Not Available in iOS Settings
+
+**Problem:** The "Time Sensitive Alerts" option doesn't appear in iOS Settings.
+
+**Solutions:**
+1. Update to iOS 15.0 or later
+2. Ensure Hookr has been granted basic notification permissions first
+3. Trigger at least one Time Sensitive notification (iOS only shows the permission after first use)
+4. Restart the Hookr app and check Settings again
+
+---
+
+### Android Notifications Behave the Same
+
+**Problem:** No difference between Time Sensitive and regular notifications on Android.
+
+**Expected Behavior:** This is normal. Android handles high-priority notifications differently than iOS Time Sensitive. Time Sensitive webhooks will use high-priority delivery channels, but the visual and behavioral difference may be subtle depending on your device and Android version.
+
+---
+
+## Platform Limitations
+
+| Platform | Time Sensitive Support | Notes |
+|----------|------------------------|-------|
+| **iOS 15.0+** | ✅ Full support | Breaks through DND and Focus modes with user permission |
+| **iOS 13.0-14.x** | ⚠️ Graceful degradation | Delivered as standard active notifications |
+| **Android** | ⚠️ High-priority delivery | Uses Android importance system; behavior varies by device |
+
+---
+
+## Technical Details
+
+Time Sensitive notifications use platform-specific APIs to control delivery priority and interruption behavior:
+
+- **iOS:** Uses APNS (Apple Push Notification service) with `interruption-level: "time-sensitive"` and priority `10`
+- **Android:** Uses FCM (Firebase Cloud Messaging) with `priority: "high"`
+- **Backend:** Bypasses user-configured silence windows when `is_time_sensitive` flag is true
+
+For complete technical implementation details, including database schemas, API payloads, timezone handling, and developer integration guides, see the developer documentation.

@@ -1,0 +1,125 @@
+---
+title: 'Events'
+description: 'View and manage every HTTP request your webhooks receive. Events capture request details, titles, messages, and forwarding history.'
+---
+
+## Overview
+
+An **event** is a record of a single HTTP request received by your webhook. When someone sends a request to your webhook URL, Hookr captures and stores the complete details—including the request body, headers, query parameters, the time it arrived, and any custom title or message you configured.
+
+Think of events as a log of everything your webhooks receive. You can view them in the app, see what data arrived, and track whether the event was forwarded to external services.
+
+---
+
+## When Events Are Stored
+
+Events are created for both public and private webhooks, but what gets stored depends on your webhook type:
+
+| Webhook Type | Event Storage | In Events List? |
+|---|---|---|
+| **Public Webhook** | ✅ Full event stored (data, headers, body, query parameters, title, message, timestamps) | ✅ Yes |
+| **Private Webhook** (🔒 enabled) | ⚠️ Title, message, and timestamps stored only—technical details (headers, body, query parameters) hidden | ✅ Yes, but without technical details |
+
+**Why this design:** When you enable [Private Mode](/features/private-mode), sensitive request data is deleted after processing and not stored on Hookr servers. Your custom notification title and message are still stored and visible in your event log. Since you can include variables from incoming data in your [Handlebars templates](/features/handlebars), be mindful of what data you reference in your message template—anything you include there will be stored in your event log.
+
+---
+
+## Events List Screen
+
+The Events List shows all your incoming webhook requests in reverse chronological order (newest first).
+
+### What You'll See
+
+| Element | What It Means |
+|---|---|
+| **Statistics Panel** | Shows event counts for the last 7 and 31 days, plus a chart of daily activity trends |
+| **Event Item** | Each row displays an event |
+| **Bell Icon** | 🔔 Filled = unread, 🔕 outlined = read |
+| **Title** | Custom event title (if you set one using a template) or the webhook name |
+| **Message** | Preview of the notification message or webhook description |
+| **Time** | How long ago the event arrived (e.g., "2 minutes ago", "1 hour ago") |
+| **Highlight** | Unread events have a light background to stand out |
+
+### Unread & Read Events
+
+When an event first arrives, you get a push notification and the event appears **unread** (bell icon filled). When you tap an event to view its details, it's automatically marked **read**. Read events keep their record but no longer show as new.
+
+### Refreshing the List
+
+Pull down on the Events List to fetch the latest events immediately.
+
+---
+
+## Event Detail Screen
+
+Tap any event to see complete details. The detail screen shows what data arrived and (if enabled) where it was forwarded.
+
+### Header & Actions
+
+- **Event Title**: The custom title from your webhook template (if set)
+- **Read Status**: Shows whether you've viewed this event and when
+- **Webhook Link**: Tap to jump to the webhook that received this event
+- **Delete Button**: Remove this event (deletes associated forwarding history too)
+
+### Technical Details (Expandable Sections)
+
+For **public webhooks**, technical information is organized in collapsible sections you can tap to expand:
+
+- **HTTP Method** — The request type (GET, POST, PUT, DELETE, PATCH, etc.)
+- **Headers** — Request headers as key-value pairs. Long-press a header to copy it.
+- **Query Parameters** — URL parameters parsed as key-value pairs
+- **Request Payload** — The raw request body, formatted as JSON if possible. Tap the copy button to copy the entire payload.
+
+**For private webhooks**, these sections are hidden to protect sensitive data.
+
+### Message Display
+
+Shows the notification message that was sent to you when the event arrived. This message is generated from your [Handlebars template](/features/handlebars) in the webhook settings.
+
+### Forwarding History
+
+If your webhook has [Forwarding](/features/forwarding-proxying) enabled, this section shows every attempt to send the event to your external URLs:
+
+- **Status Badge** — The HTTP response code (green for 2xx success, red for errors)
+- **Status Text** — Response description (e.g., "OK", "Not Found")
+- **Target URL** — Which external service received the event
+- **Response Time** — How long the forwarded request took (in milliseconds)
+- **Response Body** — The response from the external service (if available)
+
+If forwarding isn't enabled or no attempts have been made, this section shows "No forwarding attempts".
+
+---
+
+## Understanding Your Event Data
+
+Events captured from your webhooks include:
+
+- **Method**: HTTP method of the incoming request
+- **Headers**: All request headers sent with the request
+- **Query Parameters**: Parameters from the URL (e.g., `?status=success&id=123`)
+- **Request Body**: The payload data (JSON, form data, etc.)
+- **Timestamp**: Exact time the event was received
+- **URL**: The full webhook URL that received the request
+- **Client IP**: The IP address that sent the request
+
+All of this data can be used in your [Handlebars templates](/features/handlebars) to create dynamic notification titles and messages.
+
+---
+
+## Deleting Events
+
+You can delete individual events from the detail screen using the delete button. Deleting an event removes:
+
+- The event record
+- Any associated forwarding history
+
+Deleted events cannot be recovered.
+
+---
+
+## Tips & Best Practices
+
+- **Use templates for clarity**: Set up [Handlebars templates](/features/handlebars) in your webhook message to extract and display important data from your events.
+- **Review forwarding history**: If you have [Forwarding](/features/forwarding-proxying) enabled, check the forwarding history to confirm events reached their destinations.
+- **Private Mode for sensitive data**: If a webhook receives sensitive information (passwords, API keys, etc.), enable [Private Mode](/features/private-mode) to ensure raw data never reaches Hookr servers. You'll still see titles and messages in your events.
+- **Monitor activity**: Use the statistics panel to spot trends—a sudden drop or spike in events might indicate an integration issue or unexpected activity.

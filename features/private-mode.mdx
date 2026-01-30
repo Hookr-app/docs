@@ -1,0 +1,142 @@
+---
+title: 'Private Mode'
+description: 'Keep sensitive webhook data private. Prevent event payloads from being stored on Hookr servers while maintaining notifications and forwarding.'
+---
+
+## Overview
+
+Private Mode is a data privacy feature that handles your webhook event payloads temporarily for processing, then permanently deletes them after notifications and forwarding are complete. No data persists to our database.
+
+Think of it like a mail carrier who reads your envelope, delivers it, and then shreds the envelope—nothing is kept on file.
+
+### Why Use Private Mode?
+
+- **Sensitive Data Protection**: Credentials, passwords, authentication tokens, and personal information are processed then permanently deleted—never persisted
+- **Reduced Risk**: Less stored data means less to be compromised if a breach occurs
+- **Peace of Mind**: Your sensitive information is processed but not archived
+- **Full Functionality**: Notifications and event forwarding work exactly the same
+
+## When to Use Private Mode
+
+Enable Private Mode for webhooks that contain sensitive or personally identifiable information:
+
+| Type of Data | Examples | Recommended |
+|---|---|---|
+| **Credentials & Secrets** | API keys, authentication tokens, passwords, security credentials | ✅ Use Private Mode |
+| **Financial Information** | Payment details, transaction amounts, bank account data, invoice information | ✅ Use Private Mode |
+| **Personal Information** | Names, email addresses, phone numbers, home addresses, user IDs | ✅ Use Private Mode |
+| **Health & Medical Data** | Medical test results, appointment details, patient records | ✅ Use Private Mode |
+| **Authentication Events** | Login attempts, password resets, two-factor codes, session tokens | ✅ Use Private Mode |
+| **Internal Alerts** | Customer orders, business transactions, internal system notifications | ✅ Use Private Mode |
+| **General Notifications** | Public alerts, status updates, non-sensitive announcements | ❌ Not necessary |
+| **Development/Testing Data** | Test payloads you need to inspect and debug | ❌ Not recommended |
+
+## How It Works
+
+### What Happens When Private Mode Is Enabled
+
+When a webhook receives an event with Private Mode enabled:
+
+1. ✅ **Payload is received and validated** — Same as normal webhooks
+2. ✅ **Notifications are sent** — You get your push notification with the full message
+3. ✅ **Events are forwarded** — If forwarding is enabled, your data goes to the destination URL
+4. ✅ **Data is processed** — Handlebars variables are compiled, HMAC signatures generated, etc.
+5. ✅ **Metadata & message stored** — Event metadata (timestamp, status), notification title, and message are kept in the database
+6. ❌ **Payload data deleted** — The raw event payload is permanently deleted and never stored
+
+### Data Flow Comparison
+
+| What Happens | Normal Webhook | Private Webhook |
+|---|---|---|
+| Event data validated | ✅ | ✅ |
+| Notifications sent | ✅ | ✅ |
+| Events forwarded | ✅ | ✅ |
+| Data processed | ✅ | ✅ |
+| Metadata stored | ✅ | ✅ |
+| Notification title & message stored | ✅ | ✅ |
+| Raw payload persisted | ✅ | ❌ |
+| Visible in Events list | ✅ | ✅ (metadata only) |
+| Can review past payloads | ✅ | ❌ |
+
+### Important Limitations
+
+**⚠️ Variable Preview Unavailable**
+
+When you enable Private Mode, the variable picker (used for building Handlebars templates) can no longer show recent event data. This means:
+
+- You won't see available fields from recent events
+- You'll need to know your webhook's payload structure in advance
+- You can still use Handlebars variables—you just type them manually instead of selecting them
+
+**Before enabling Private Mode:** Document what fields the webhook sends you (ask your webhook provider or check their documentation), and note down the variable names you plan to use.
+
+**Limited Event History**
+
+Private Mode events appear in your Events list with metadata and the notification title/message, so you can see what was sent. However, you can't inspect the original payload data—it's been permanently deleted. This prevents you from debugging based on raw event content, but you still have visibility into the notifications that were sent.
+
+## Setup: Enabling Private Mode
+
+Enabling Private Mode is simple:
+
+1. **Open your webhook** — Find the webhook you want to make private
+2. **Edit the webhook** — Click the edit button or settings
+3. **Toggle Private Mode** — Look for the "Private" checkbox and enable it
+4. **Read the confirmation** — You'll see a note: *"When enabled, your webhook data won't be saved on our servers. We'll only use it temporarily to send your notification and forwarding (if enabled)."*
+5. **Save your webhook** — All future events will be processed privately
+
+Once enabled, a **shield icon** (🛡️) appears next to your webhook name so you can quickly identify which webhooks are private.
+
+**Note:** Private Mode is disabled by default. All new webhooks store event payloads normally until you explicitly enable Private Mode.
+
+### Before You Enable Private Mode
+
+1. ✅ **Get your payload documentation** — Contact the webhook source to confirm what fields they send
+2. ✅ **List your variables** — Write down the Handlebars variables you're using (e.g., `{{body.amount}}`, `{{body.user_name}}`)
+3. ✅ **Test your templates** — Send a test event while in normal mode to verify everything works
+4. ✅ **Then enable Private Mode** — Once you're confident, toggle it on
+
+## Frequently Asked Questions
+
+### Can I still use Handlebars variables with Private Mode?
+
+Yes! Handlebars variables work identically. The difference is you won't see a list of available fields when building your message template—you'll type them manually instead.
+
+**Example:** If your webhook sends `{{body.user_id}}` and `{{body.transaction_amount}}`, type these directly into your message template. They'll work perfectly when events arrive.
+
+### What if I need to debug a Private webhook that isn't working?
+
+Debugging is harder with Private Mode since you can't inspect past payloads. Try these approaches:
+
+1. **Temporarily disable Private Mode** — Switch it off, send a test event, inspect the data, then re-enable it
+2. **Use external logging** — If forwarding is enabled, forward events to your own logging service where you control storage
+3. **Check with your source** — Confirm the webhook source is actually sending events to your webhook URL
+4. **Review notifications** — Check if you're receiving notifications (proves events are arriving)
+
+### Can I switch a webhook between Private and Normal mode?
+
+Yes, anytime. The toggle only affects **new incoming events**:
+
+- **Switching to Private**: Future events won't be stored
+- **Switching to Normal**: Future events will be stored (previously private events remain deleted)
+
+### What happens to my existing events if I enable Private Mode?
+
+Nothing. Existing events in your database stay there. Private Mode only affects new events going forward.
+
+### Does Private Mode work with other features like Forwarding and Time Sensitive?
+
+Yes! Private Mode works independently of:
+
+- **Forwarding** — Your data is still forwarded to destination URLs with HMAC signatures
+- **Time Sensitive** — Priority notifications still work normally
+- **Custom Messages** — Handlebars templates continue to work
+
+You can combine Private Mode with any other feature.
+
+### Is there a performance difference?
+
+Private Mode may slightly improve performance since we're skipping the database storage step. However, you likely won't notice a difference—the main benefit is data privacy, not speed.
+
+### Does Private Mode encrypt data?
+
+Private Mode prevents *storage*, not encryption. All webhooks (private or normal) should use HTTPS for transport security. Private Mode ensures your data isn't persisted to our servers after processing.

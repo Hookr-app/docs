@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"Mintlify": {
+			"url": "https://www.mintlify.com/docs/mcp",
+			"type": "http"
+		}
+	},
+	"inputs": []
+}

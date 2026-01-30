@@ -1,0 +1,154 @@
+---
+title: 'Limitations'
+description: 'Understand webhook constraints including payload size, rate limits, retries, and credit costs'
+---
+
+Webhooks are automated messages sent from our system to your application. While they're powerful and flexible, there are limits in place to ensure the system runs smoothly for everyone.
+
+## Message Size Limit
+
+**Maximum payload size: 1 MB**
+
+Your webhook payload cannot exceed 1 megabyte in total size. This includes JSON data, form data, XML data, plain text, and URL-encoded data.
+
+If you exceed this limit, the webhook will be rejected and won't be processed.
+
+## Rate Limiting
+
+**Maximum: 10 requests per minute per webhook**
+
+Each individual webhook can be triggered up to 10 times per minute. This is an individual rate limit — each webhook has its own separate 10-request allowance. After that, additional requests to that specific webhook will be blocked until the minute resets.
+
+### Rate Limit Response
+
+When you exceed the rate limit, you'll receive:
+
+```json
+{
+  "statusCode": 429,
+  "message": "Rate limit exceeded. This webhook can be triggered a maximum of 10 times per minute."
+}
+```
+
+**HTTP Status:** 429 Too Many Requests
+
+## Request Methods
+
+**Supported methods: GET and POST**
+
+You can trigger webhooks using either GET requests (data passed as URL parameters) or POST requests (data sent in the request body). Other methods like PUT, PATCH, or DELETE are not supported.
+
+### Success Response
+
+When your webhook is successfully queued for processing:
+
+```json
+{
+  "success": true,
+  "timestamp": "2026-01-30T12:59:32.313Z",
+  "message": "Webhook queued for processing"
+}
+```
+
+**HTTP Status:** 200 OK
+
+## Processing & Automatic Retries
+
+**Maximum retry attempts: 5**
+
+If our system fails to deliver or process your webhook on the first try, it will automatically retry up to 5 times using exponential backoff:
+
+- 1st retry: 15 seconds
+- 2nd retry: 30 seconds  
+- 3rd retry: 60 seconds
+- 4th retry: 120 seconds
+- 5th retry: 240 seconds
+
+After 5 failures, the webhook is stored for debugging purposes.
+
+## Credit Requirements
+
+Each webhook invocation requires credits to process. Your account must have sufficient credits available before a webhook is executed.
+
+<Note>
+  Learn more about our credit system, plans, and pricing in the [Pricing & Credits](pricing) page.
+</Note>
+
+## Data Privacy & Sensitive Information
+
+Webhooks can be marked as private for security purposes.
+
+When a webhook is in private mode:
+- The raw payload data is hidden (set to null in the webhook record)
+- Query string parameters are hidden (set to null)
+- This protects sensitive data from being logged or exposed in the system
+
+Use private mode when sending webhooks containing passwords, tokens, or other confidential information.
+
+## Supported Content Types
+
+Your webhook payloads can be sent in any of these formats:
+
+- `application/json` - JSON format (recommended)
+- `application/x-www-form-urlencoded` - Standard form data
+- `application/xml` - XML format
+- `text/plain` - Plain text
+- `multipart/form-data` - Form data with file uploads
+
+## What Data Is Captured
+
+When a webhook is triggered, the system captures:
+
+- **HTTP method** - Whether it was a GET or POST request
+- **Headers** - All headers from your request
+- **Query parameters** - Any parameters in the URL (unless private mode is enabled)
+- **Request body** - The main data payload (unless private mode is enabled)
+- **Timestamp** - Exact date and time of the webhook trigger
+- **Full URL** - The complete request URL
+- **Client IP address** - The IP address that sent the webhook
+
+## Data Sanitization
+
+Values in your webhook are automatically cleaned for safety and compatibility:
+
+- **Functions** are converted to: `[Function]`
+- **Symbols and unsupported types** are converted to: `[Unknown]`
+- All values are converted to JSON-compatible formats
+
+## Quick Reference
+
+| Limit | Value |
+|-------|-------|
+| **Maximum payload size** | 1 MB |
+| **Rate limit** | 10 requests/minute |
+| **Maximum retries** | 5 attempts |
+| **Base credit cost** | 1 credit |
+| **Cost per forward destination** | +1 credit |
+| **Supported methods** | GET, POST |
+| **Success response status** | 200 OK |
+| **Rate limit error status** | 429 |
+
+## Troubleshooting
+
+### Getting 429 error?
+
+You're sending too many webhooks. Wait for the next minute window to send additional requests. Space out your webhook triggers to no more than 10 per minute.
+
+### Webhook was queued but nothing happened?
+
+The webhook may be waiting to be processed, retrying after a failure, or skipped because a requirement wasn't met. Check that:
+- The webhook is enabled
+- Your user account is active
+- You have sufficient credits remaining
+- Your payload is under 1 MB
+
+### Payload is being rejected?
+
+Check that:
+- Your payload doesn't exceed 1 MB
+- You're using one of the supported content types
+- You're sending data that can be converted to JSON format (avoid functions and complex objects)
+
+### Private webhook isn't hiding sensitive data?
+
+Make sure you've enabled private mode on the specific webhook. Check your webhook settings to confirm the private flag is set to true.

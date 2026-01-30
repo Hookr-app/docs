@@ -1,0 +1,127 @@
+---
+title: 'Webhooks'
+description: 'Automatically send push notifications and forward events to external services whenever something happens in your account.'
+---
+
+## Overview
+
+A webhook is a receiver that accepts incoming requests from external services or applications. When a request arrives at your webhook, it automatically sends you a push notification. Your webhook can also:
+
+- Automatically forward the incoming data to external services (Zapier, custom APIs, etc.)
+- Create personalized notification messages using information from the request
+- Keep sensitive data private on your device only—never store it on Hookr servers
+- Control whether notifications interrupt Do Not Disturb mode on iPhone or Focus modes on Android
+
+Think of a webhook as a mailbox that alerts you when something arrives and can forward it wherever you need it to go.
+
+---
+
+## Webhook Entity
+
+A webhook has several properties that control how it behaves. Here's what each one does:
+
+| Property | What It Means |
+|----------|--------------|
+| **Title** | The name you give to identify this webhook (e.g., "Daily Report", "Error Alert") |
+| **Message** | The text sent in push notifications. You can personalize it using data from your event. |
+| **Enabled** | When turned on, the webhook listens for events and sends notifications. When off, it stays silent. |
+| **Private** | When enabled, event data stays only on your device—never stored on Hookr servers. Extra privacy. |
+| **Time Sensitive** | When enabled on iPhone, notifications break through Do Not Disturb mode to reach you immediately. |
+| **Forwarding** | When enabled, event data is automatically sent to external URLs you specify. |
+| **Forward URLs** | Up to 3 external services where Hookr will send your event data (e.g., your API, Zapier, webhooks.fun). |
+| **Forward Secret** | A security code used to verify that forwarded requests actually come from Hookr. Treat it like a password. |
+| **Last Event** | Shows when the webhook last received an event. Helps you know if it's still working. |
+
+---
+
+## Webhooks List Screen
+
+The Webhooks List is where you see and manage all your webhooks.
+
+### What You'll See
+
+| Item | Meaning |
+|------|---------|
+| **Webhook Name** | The title you gave this webhook |
+| **Status Badges** | Small icons showing special settings: 🔒 = Private, ⏱️ = Time Sensitive, ⬆️ = Forwarding Enabled |
+| **Last Event Indicator** | A colored dot showing activity: 🟢 Green = recent event, ⚪ Gray = no recent events |
+| **Last Event Time** | How long ago the webhook received an event (e.g., "2 hours ago") |
+| **Toggle Switch** | Turn the webhook on or off without deleting it |
+
+### How to Use It
+
+1. **View all webhooks**: Scroll through the list to see your webhooks
+2. **Enable/Disable**: Tap the toggle switch to turn any webhook on or off
+3. **Check activity**: Look at the colored dot to verify the webhook is receiving events
+4. **Edit webhook**: Tap on a webhook row to open it for editing
+5. **Refresh**: Pull down on the list to refresh and see the latest status
+
+---
+
+## Create or Edit a Webhook
+
+When you create a new webhook or edit an existing one, you'll see a form with these fields:
+
+### Prerequisites
+
+- You need to know the name you want for your webhook
+- Optional: You should have an idea of what event data you want to include in your notification message
+
+### Form Fields
+
+| Field | Required? | Purpose | Rules |
+|-------|-----------|---------|-------|
+| **Title** | Yes | The name of your webhook | Must be 3-512 characters long |
+| **Message** | No | The text sent in notifications | If provided, must be 6-1024 characters; can include personalized data from your event |
+| **Private** | No | Store data only on your device | Turn on for sensitive information |
+| **Time Sensitive** | No | Override iPhone's Do Not Disturb | Turn on only for urgent alerts |
+| **Enable Forwarding** | No | Send events to external URLs | Turn on to reveal forwarding fields |
+| **Forward URLs** | Conditional | External services to send data to | Required if forwarding is on; enter 1-3 URLs |
+| **Forward Secret** | Conditional | Security verification code | Required if forwarding is on; automatically generated, shows masked for security |
+
+### How to Create a Webhook
+
+1. Tap the Create button or "+" icon
+2. Enter a descriptive **Title** (e.g., "Payment Received", "Form Submission")
+3. Optionally enter a **Message** - you can personalize it with event data
+4. Choose any privacy or notification settings you need (see Features section below)
+5. Tap the checkmark (✓) button to save
+6. Your webhook is now ready to receive events
+
+### How to Edit a Webhook
+
+1. Tap on any webhook in the list to open it
+2. Make your changes to any field
+3. Tap the checkmark (✓) button to save
+4. Changes take effect immediately
+
+### How to Delete a Webhook
+
+1. Open the webhook you want to delete
+2. Tap the trash/delete icon
+3. Confirm the deletion
+4. The webhook is permanently deleted and cannot be recovered
+
+---
+
+## Features
+
+Here's what each webhook feature does and when to use it:
+
+| Feature | What It Does | When to Use It | Learn More |
+|---------|-------------|---------------|----|
+| **Private Mode** | Event data stays only on your device, never on Hookr servers | You have sensitive information (financial data, credentials, personal details) | [Private Mode](../features/private-mode.mdx) |
+| **Time Sensitive** | iPhone notifications break through Do Not Disturb mode | You need urgent alerts that can't wait | [Time Sensitive Notifications](../features/time-sensitive.mdx) |
+| **Forwarding** | Automatically send event data to external URLs (up to 3) | You want to integrate with Zapier, custom APIs, or other services | [Forwarding (Proxying)](../features/forwarding-proxying.mdx) |
+
+---
+
+## Message Templates
+
+Your notification messages can include personalized data from your events. Instead of static messages, you can create dynamic ones like:
+
+- "Payment of $50 received from John"
+- "Error in getUserData function"
+- "Order #12345 is now shipped"
+
+See [Message Templates with Handlebars](../features/handlebars.mdx) for detailed instructions on how to insert event data into your messages.

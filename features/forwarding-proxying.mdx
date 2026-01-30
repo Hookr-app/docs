@@ -1,0 +1,639 @@
+---
+title: 'Forwarding (Proxying)'
+description: 'Automatically relay webhook events to external URLs. Send events to multiple destinations.'
+---
+
+## Overview
+
+Forwarding is a feature that automatically sends your webhook event data to external URLs you specify. When enabled, Hookr acts as a middleware—receiving webhook events and instantly relaying them to your own services, integrations, or APIs.
+
+This is especially useful when an event source supports only a single webhook URL, but you need to send the data to multiple destinations like Zapier, custom APIs, or other automation platforms.
+
+### Why Use Forwarding?
+
+- **Multiple Destinations**: Send a single event to up to 3 different URLs simultaneously
+- **Secure Verification**: Each forwarded request includes cryptographic signatures so recipients can verify authenticity
+- **Easy Integration**: Works with Zapier, Make, IFTTT, custom APIs, and any HTTP endpoint
+- **Complete Transparency**: View the history of every forwarded request with response details
+- **Original Data Preserved**: The exact event payload is forwarded without modification
+- **Works with Everything**: Compatible with Private Mode, Time Sensitive notifications, and all other features
+
+## When to Use Forwarding
+
+Enable Forwarding for webhooks when you need to send event data to external services:
+
+| Use Case | Example |
+|---|---|
+| **Multiple Integrations** | Event source has one webhook URL, but you need both Zapier AND a custom API to receive it |
+| **Automation Workflows** | Forward form submissions to Zapier, Make, or IFTTT for workflow automation |
+| **Data Distribution** | Send the same event to multiple logging, analytics, or monitoring services |
+| **Audit Trails** | Forward events to an external system that maintains compliance audit logs |
+| **Partner Integration** | Send data to a partner's API while keeping Hookr for your mobile notifications |
+| **Backup & Redundancy** | Send critical events to multiple endpoints for reliability |
+| **Custom Processing** | Forward to your own server for custom business logic or data transformation |
+
+### When NOT to Use Forwarding
+
+Avoid Forwarding if:
+
+- **No external services needed** — If you only need mobile notifications, standard webhooks are simpler
+- **Service can't handle HTTP POST** — Your destination must accept HTTP POST requests
+- **Need data transformation** — Hookr forwards data as-is; use an intermediary service for transformations
+
+## How It Works
+
+### What Happens When Forwarding Is Enabled
+
+When a webhook with Forwarding enabled receives an event:
+
+1. ✅ **Event arrives** — Hookr receives the webhook at your unique URL
+2. ✅ **Notification sent** — You get a push notification (if a message is configured)
+3. ✅ **Data forwarded** — The complete event payload is sent to each configured URL
+4. ✅ **Request signed** — Each forwarded request includes an HMAC SHA256 cryptographic signature
+5. ✅ **History recorded** — Forwarding results (status, response, timing) are saved for review
+
+### Data Flow Comparison
+
+| What Happens | Normal Webhook | Webhook with Forwarding |
+|---|---|---|
+| Event received | ✅ | ✅ |
+| Notification sent | ✅ | ✅ |
+| Event stored in database | ✅ | ✅ |
+| Data forwarded to external URLs | ❌ | ✅ |
+| Cryptographic signature included | ❌ | ✅ |
+| Forwarding history recorded | ❌ | ✅ |
+
+### What Gets Forwarded
+
+The **complete original payload** is forwarded to your external URLs, including:
+
+- All JSON fields from the original request
+- Query string parameters
+- Original HTTP method (POST, PUT, etc.)
+- Exact data structure (no transformation)
+
+**Important:** Hookr forwards the raw data as received. No filtering or modification is applied.
+
+## Setup: Enabling Forwarding
+
+Enabling Forwarding is straightforward:
+
+1. **Open your webhook** — Find the webhook you want to enable forwarding on
+2. **Edit the webhook** — Click the edit button or settings
+3. **Toggle "Enable Forwarding"** — This reveals the forwarding configuration options
+4. **Add destination URLs** — Add 1-3 URLs where events should be forwarded:
+   - Click the **+** button to add a URL field
+   - Enter a valid `https://` or `http://` URL
+   - Click **-** to remove unwanted URLs
+5. **Copy your secret** — A forwarding secret is automatically generated:
+   - Displayed as masked text: `XXXX...XXXX`
+   - Click the **copy button** to copy it
+   - Click **reset** to generate a new secret anytime
+6. **Save your webhook** — Future events will be automatically forwarded
+
+Once enabled, an **arrow icon badge** (↗️) appears next to your webhook name so you can quickly identify which webhooks have Forwarding enabled.
+
+**Note:** Forwarding is disabled by default. All webhooks send only notifications until you explicitly enable Forwarding.
+
+### URL Requirements
+
+- **Format**: Must be a valid HTTP or HTTPS URL
+- **Prefix**: Must start with `http://` or `https://`
+- **Count**: Enter 1-3 URLs (fields can be left empty)
+- **Length**: Each URL must be 2,048 characters or less
+
+**Valid Examples:**
+- `https://zapier.com/hooks/catch/123456/abc`
+- `https://api.myapp.com/webhooks/events`
+- `https://example.com/webhook?token=abc123`
+- `http://localhost:3000/webhook` (for local testing)
+
+### Secret Key Management
+
+The **Forward Secret** is your security credential used to sign every forwarded request.
+
+- **Auto-Generated**: When you enable Forwarding, Hookr automatically generates a secure random secret
+- **Displayed Masked**: Shown as `XXXX...XXXX` (first and last 6 characters visible)
+- **Copy & Share**: Click the copy button and share it with services receiving your webhooks
+- **Reset Anytime**: Click reset to generate a new secret (old secret stops working immediately)
+- **Treat Like a Password**: Never share your secret publicly or commit it to version control
+
+## Security & Verification
+
+### Why Verify Signatures?
+
+Every forwarded request includes a cryptographic signature. This allows your external service to verify:
+
+1. **Authenticity** — The request actually came from Hookr (not spoofed)
+2. **Integrity** — The payload hasn't been tampered with during transmission
+
+### How Signatures Work
+
+Hookr includes these headers with every forwarded request:
+
+| Header | Example | Purpose |
+|---|---|---|
+| `X-Hookr-Signature` | `sha256=abc123...` | HMAC SHA256 signature of the request body |
+| `X-Hookr-Timestamp` | `1738243200` | Unix timestamp when the request was sent |
+| `Content-Type` | `application/json` | Indicates the payload format |
+| `User-Agent` | `Hookr/1.0` | Identifies the request came from Hookr |
+
+### Verification Methods
+
+You can verify signatures in two ways:
+
+1. **Body Signature** (Recommended) — Verify the HMAC of the entire request body
+2. **Timestamp Signature** — Verify the HMAC of just the timestamp (for GET requests or when body verification isn't possible)
+
+## Code Examples: Signature Verification
+
+### Body Signature Verification
+
+This is the standard method for verifying POST requests with a body.
+
+<CodeGroup>
+
+```javascript Node.js
+const crypto = require('crypto');
+
+function verifyBodySignature(body, signature, secret) {
+  // Extract the hash from the signature header
+  const [algorithm, receivedHash] = signature.split('=');
+  
+  // Calculate expected signature
+  const expectedHash = crypto
+    .createHmac('sha256', secret)
+    .update(body, 'utf8')
+    .digest('hex');
+  
+  // Compare signatures
+  return receivedHash === expectedHash;
+}
+
+// Usage
+const rawBody = request.body; // Raw request body as string
+const signature = request.headers['x-hookr-signature'];
+const secret = 'your-forward-secret-here';
+
+if (verifyBodySignature(rawBody, signature, secret)) {
+  console.log('✅ Signature valid - request is authentic');
+} else {
+  console.log('❌ Signature invalid - reject request');
+}
+```
+
+```python Python
+import hmac
+import hashlib
+
+def verify_body_signature(body, signature, secret):
+    # Extract the hash from the signature header
+    algorithm, received_hash = signature.split('=')
+    
+    # Calculate expected signature
+    expected_hash = hmac.new(
+        secret.encode('utf-8'),
+        body.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    # Compare signatures
+    return received_hash == expected_hash
+
+# Usage
+raw_body = request.body  # Raw request body as string
+signature = request.headers.get('X-Hookr-Signature')
+secret = 'your-forward-secret-here'
+
+if verify_body_signature(raw_body, signature, secret):
+    print('✅ Signature valid - request is authentic')
+else:
+    print('❌ Signature invalid - reject request')
+```
+
+```go Go
+package main
+
+import (
+    "crypto/hmac"
+    "crypto/sha256"
+    "encoding/hex"
+    "strings"
+)
+
+func verifyBodySignature(body string, signature string, secret string) bool {
+    // Extract the hash from the signature header
+    parts := strings.Split(signature, "=")
+    if len(parts) != 2 {
+        return false
+    }
+    receivedHash := parts[1]
+    
+    // Calculate expected signature
+    h := hmac.New(sha256.New, []byte(secret))
+    h.Write([]byte(body))
+    expectedHash := hex.EncodeToString(h.Sum(nil))
+    
+    // Compare signatures
+    return hmac.Equal([]byte(receivedHash), []byte(expectedHash))
+}
+
+// Usage
+rawBody := string(requestBody) // Raw request body as string
+signature := r.Header.Get("X-Hookr-Signature")
+secret := "your-forward-secret-here"
+
+if verifyBodySignature(rawBody, signature, secret) {
+    fmt.Println("✅ Signature valid - request is authentic")
+} else {
+    fmt.Println("❌ Signature invalid - reject request")
+}
+```
+
+```java Java
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+public class SignatureVerifier {
+    
+    public static boolean verifyBodySignature(String body, String signature, String secret) 
+            throws NoSuchAlgorithmException, InvalidKeyException {
+        // Extract the hash from the signature header
+        String[] parts = signature.split("=");
+        if (parts.length != 2) {
+            return false;
+        }
+        String receivedHash = parts[1];
+        
+        // Calculate expected signature
+        Mac hmac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+        hmac.init(secretKey);
+        byte[] hashBytes = hmac.doFinal(body.getBytes());
+        
+        // Convert to hex string
+        StringBuilder expectedHash = new StringBuilder();
+        for (byte b : hashBytes) {
+            expectedHash.append(String.format("%02x", b));
+        }
+        
+        // Compare signatures
+        return receivedHash.equals(expectedHash.toString());
+    }
+    
+    // Usage
+    public static void main(String[] args) {
+        String rawBody = request.getBody(); // Raw request body as string
+        String signature = request.getHeader("X-Hookr-Signature");
+        String secret = "your-forward-secret-here";
+        
+        try {
+            if (verifyBodySignature(rawBody, signature, secret)) {
+                System.out.println("✅ Signature valid - request is authentic");
+            } else {
+                System.out.println("❌ Signature invalid - reject request");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Error verifying signature: " + e.getMessage());
+        }
+    }
+}
+```
+
+```php PHP
+<?php
+
+function verifyBodySignature($body, $signature, $secret) {
+    // Extract the hash from the signature header
+    list($algorithm, $receivedHash) = explode('=', $signature, 2);
+    
+    // Calculate expected signature
+    $expectedHash = hash_hmac('sha256', $body, $secret);
+    
+    // Compare signatures (timing-safe comparison)
+    return hash_equals($receivedHash, $expectedHash);
+}
+
+// Usage
+$rawBody = file_get_contents('php://input'); // Raw request body
+$signature = $_SERVER['HTTP_X_HOOKR_SIGNATURE'];
+$secret = 'your-forward-secret-here';
+
+if (verifyBodySignature($rawBody, $signature, $secret)) {
+    echo '✅ Signature valid - request is authentic';
+} else {
+    echo '❌ Signature invalid - reject request';
+}
+?>
+```
+
+```csharp C#
+using System;
+using System.Security.Cryptography;
+using System.Text;
+
+public class SignatureVerifier
+{
+    public static bool VerifyBodySignature(string body, string signature, string secret)
+    {
+        // Extract the hash from the signature header
+        var parts = signature.Split('=');
+        if (parts.Length != 2)
+        {
+            return false;
+        }
+        var receivedHash = parts[1];
+        
+        // Calculate expected signature
+        var encoding = new UTF8Encoding();
+        var keyBytes = encoding.GetBytes(secret);
+        var bodyBytes = encoding.GetBytes(body);
+        
+        using (var hmac = new HMACSHA256(keyBytes))
+        {
+            var hashBytes = hmac.ComputeHash(bodyBytes);
+            var expectedHash = BitConverter.ToString(hashBytes)
+                .Replace("-", "")
+                .ToLower();
+            
+            // Compare signatures
+            return receivedHash == expectedHash;
+        }
+    }
+    
+    // Usage
+    public static void Main()
+    {
+        string rawBody = request.Body; // Raw request body as string
+        string signature = request.Headers["X-Hookr-Signature"];
+        string secret = "your-forward-secret-here";
+        
+        if (VerifyBodySignature(rawBody, signature, secret))
+        {
+            Console.WriteLine("✅ Signature valid - request is authentic");
+        }
+        else
+        {
+            Console.WriteLine("❌ Signature invalid - reject request");
+        }
+    }
+}
+```
+
+</CodeGroup>
+
+---
+
+### Timestamp Signature Verification
+
+For requests without a body (like GET requests) or as an additional security check, verify the timestamp signature.
+
+<CodeGroup>
+
+```javascript Node.js
+const crypto = require('crypto');
+
+function verifyTimestampSignature(timestamp, signature, secret) {
+  const [algorithm, receivedHash] = signature.split('=');
+  
+  const expectedHash = crypto
+    .createHmac('sha256', secret)
+    .update(timestamp.toString(), 'utf8')
+    .digest('hex');
+  
+  return receivedHash === expectedHash;
+}
+
+// Usage
+const timestamp = request.headers['x-hookr-timestamp'];
+const signature = request.headers['x-hookr-signature'];
+const secret = 'your-forward-secret-here';
+
+if (verifyTimestampSignature(timestamp, signature, secret)) {
+  console.log('✅ Timestamp signature valid');
+} else {
+  console.log('❌ Timestamp signature invalid');
+}
+```
+
+```python Python
+import hmac
+import hashlib
+
+def verify_timestamp_signature(timestamp, signature, secret):
+    algorithm, received_hash = signature.split('=')
+    
+    expected_hash = hmac.new(
+        secret.encode('utf-8'),
+        str(timestamp).encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    
+    return received_hash == expected_hash
+
+# Usage
+timestamp = request.headers.get('X-Hookr-Timestamp')
+signature = request.headers.get('X-Hookr-Signature')
+secret = 'your-forward-secret-here'
+
+if verify_timestamp_signature(timestamp, signature, secret):
+    print('✅ Timestamp signature valid')
+else:
+    print('❌ Timestamp signature invalid')
+```
+
+```go Go
+func verifyTimestampSignature(timestamp string, signature string, secret string) bool {
+    parts := strings.Split(signature, "=")
+    if len(parts) != 2 {
+        return false
+    }
+    receivedHash := parts[1]
+    
+    h := hmac.New(sha256.New, []byte(secret))
+    h.Write([]byte(timestamp))
+    expectedHash := hex.EncodeToString(h.Sum(nil))
+    
+    return hmac.Equal([]byte(receivedHash), []byte(expectedHash))
+}
+
+// Usage
+timestamp := r.Header.Get("X-Hookr-Timestamp")
+signature := r.Header.Get("X-Hookr-Signature")
+secret := "your-forward-secret-here"
+
+if verifyTimestampSignature(timestamp, signature, secret) {
+    fmt.Println("✅ Timestamp signature valid")
+} else {
+    fmt.Println("❌ Timestamp signature invalid")
+}
+```
+
+```java Java
+public static boolean verifyTimestampSignature(String timestamp, String signature, String secret) 
+        throws NoSuchAlgorithmException, InvalidKeyException {
+    String[] parts = signature.split("=");
+    if (parts.length != 2) {
+        return false;
+    }
+    String receivedHash = parts[1];
+    
+    Mac hmac = Mac.getInstance("HmacSHA256");
+    SecretKeySpec secretKey = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+    hmac.init(secretKey);
+    byte[] hashBytes = hmac.doFinal(timestamp.getBytes());
+    
+    StringBuilder expectedHash = new StringBuilder();
+    for (byte b : hashBytes) {
+        expectedHash.append(String.format("%02x", b));
+    }
+    
+    return receivedHash.equals(expectedHash.toString());
+}
+
+// Usage
+String timestamp = request.getHeader("X-Hookr-Timestamp");
+String signature = request.getHeader("X-Hookr-Signature");
+String secret = "your-forward-secret-here";
+
+if (verifyTimestampSignature(timestamp, signature, secret)) {
+    System.out.println("✅ Timestamp signature valid");
+}
+```
+
+```php PHP
+function verifyTimestampSignature($timestamp, $signature, $secret) {
+    list($algorithm, $receivedHash) = explode('=', $signature, 2);
+    $expectedHash = hash_hmac('sha256', $timestamp, $secret);
+    return hash_equals($receivedHash, $expectedHash);
+}
+
+// Usage
+$timestamp = $_SERVER['HTTP_X_HOOKR_TIMESTAMP'];
+$signature = $_SERVER['HTTP_X_HOOKR_SIGNATURE'];
+$secret = 'your-forward-secret-here';
+
+if (verifyTimestampSignature($timestamp, $signature, $secret)) {
+    echo '✅ Timestamp signature valid';
+}
+```
+
+```csharp C#
+public static bool VerifyTimestampSignature(string timestamp, string signature, string secret)
+{
+    var parts = signature.Split('=');
+    if (parts.Length != 2) return false;
+    var receivedHash = parts[1];
+    
+    var encoding = new UTF8Encoding();
+    var keyBytes = encoding.GetBytes(secret);
+    var timestampBytes = encoding.GetBytes(timestamp);
+    
+    using (var hmac = new HMACSHA256(keyBytes))
+    {
+        var hashBytes = hmac.ComputeHash(timestampBytes);
+        var expectedHash = BitConverter.ToString(hashBytes)
+            .Replace("-", "")
+            .ToLower();
+        
+        return receivedHash == expectedHash;
+    }
+}
+
+// Usage
+string timestamp = request.Headers["X-Hookr-Timestamp"];
+string signature = request.Headers["X-Hookr-Signature"];
+string secret = "your-forward-secret-here";
+
+if (VerifyTimestampSignature(timestamp, signature, secret)) {
+    Console.WriteLine("✅ Timestamp signature valid");
+}
+```
+
+</CodeGroup>
+
+---
+
+## Best Practices
+
+### Security
+
+1. **Always verify signatures** — Never process forwarded events without verifying the signature
+2. **Treat secrets like passwords** — Don't share them in Slack, email, or commit to version control
+3. **Rotate secrets periodically** — Generate a new secret every 6-12 months
+4. **Rotate if exposed** — If you accidentally leak a secret, reset it immediately
+5. **Use HTTPS** — Always use `https://` URLs for forwarding (never `http://` in production)
+6. **Check timestamps** — Reject requests with timestamps older than 5 minutes to prevent replay attacks
+
+### Performance
+
+1. **Set timeouts** — Configure your external service with reasonable timeouts (Hookr waits 30 seconds maximum)
+2. **Return quickly** — Have your endpoint return a response quickly; do heavy processing asynchronously
+3. **Monitor forwarding history** — Check the Events list to track delivery success rates
+
+### Testing
+
+1. **Test before enabling** — Send test events to verify your external service receives and processes them correctly
+2. **Use local tunneling** — Tools like ngrok let you test forwarding to your local development server
+3. **Check forwarding history** — Review response codes and bodies in the event details to debug issues
+
+## Viewing Forwarding History
+
+### Where to Find It
+
+1. Open the **Events tab** in your Hookr app
+2. Tap on any **event** from a webhook with Forwarding enabled
+3. Scroll to the **Forwarding History** section
+
+### What You See
+
+Each forwarded URL shows:
+
+| Item | Description |
+|---|---|
+| **Status Badge** | Color-coded: 🟢 Green (2xx success), 🟡 Yellow (3xx redirect), 🔵 Blue (4xx client error), 🔴 Red (5xx server error) |
+| **URL** | The destination URL this event was forwarded to |
+| **Status Code** | HTTP response code (200, 404, 500, etc.) |
+| **Duration** | Request execution time in milliseconds |
+| **Response Body** | Response from the external service (expandable) |
+| **Content-Type** | The content type of the response |
+
+## Frequently Asked Questions
+
+### Does Forwarding work with Private Mode?
+
+Yes! Forwarding works perfectly with Private Mode. Events are still forwarded to your external URLs even though the payload data isn't stored in Hookr's database. The signature verification works identically.
+
+### Can I forward to more than 3 URLs?
+
+No, the limit is 3 URLs per webhook. If you need to send to more destinations, consider forwarding to a service that can fan out to additional URLs (like Zapier or a custom relay).
+
+### What happens if one destination fails?
+
+Forwarding happens in parallel to all URLs. If one fails, the others are unaffected. Each result is recorded independently in the forwarding history.
+
+### Can I see what was forwarded?
+
+Yes! View the event details in the Events list. The forwarding history shows the response from each destination, including status codes and response bodies.
+
+### Does Forwarding cost extra?
+
+Forwarding uses credits from your account. Each event costs 1 base credit, plus 1 credit per destination URL. Example: forwarding to 2 URLs costs 3 credits total (1 base + 2 destinations).
+
+### Can I test Forwarding locally?
+
+Yes! Use a tool like [ngrok](https://ngrok.com) to create a public URL that forwards to your local development server. Add the ngrok URL to your webhook's forwarding destinations.
+
+### What if my external service is slow?
+
+Hookr waits up to 30 seconds for a response. If your service takes longer, the request will time out and be marked as failed. Process events asynchronously on your end to return responses quickly.
+
+### Can I change the forwarding secret?
+
+Yes, click the **reset** button in the webhook settings to generate a new secret. The old secret stops working immediately, so update all external services before resetting.
+
+### What HTTP methods are supported?
+
+Hookr preserves the original HTTP method from the incoming webhook (GET, POST). Most webhooks use POST.

@@ -1,0 +1,278 @@
+---
+title: 'Handlebars'
+description: 'Use Handlebars templates to create dynamic webhook titles and messages with data from your events'
+---
+
+## Overview
+
+Handlebars is a templating language that lets you insert dynamic data from your webhook events into notification titles and messages. Instead of static text, you can reference values from your incoming data to create personalized, informative notifications.
+
+**Where you can use templates:**
+- Webhook Title
+- Webhook Message
+
+---
+
+## Available Data Sources
+
+Every webhook event provides access to these root objects:
+
+| Object | Type | Description |
+|--------|------|-------------|
+| `body` | Object | Request body (JSON, form data, query string, etc.) |
+| `query` | Object | URL query parameters |
+| `headers` | Object | HTTP request headers |
+| `url` | Object | Parsed URL components (`protocol`, `hostname`, `pathname`, `port`) |
+| `ip` | String | Client IP address |
+
+Data is available from events received within the last 7 days. If no recent events exist or the webhook is Private, you can still type template paths manually if you know your payload structure.
+
+---
+
+## Basic Template Syntax
+
+Templates use double curly braces with dot notation to access nested data:
+
+### Simple Variables
+
+```
+{{body.field_name}}
+{{headers.user-agent}}
+{{query.id}}
+```
+
+### Nested Objects
+
+Use dot notation to access nested properties:
+
+```
+{{body.customer.name}}
+{{body.payment.amount}}
+{{url.hostname}}
+```
+
+### Array Access
+
+Use numeric indexes to access array elements:
+
+```
+{{body.items.0.id}}
+{{body.items.1.price}}
+```
+
+---
+
+## Examples with Payloads
+
+### Example 1: User Signup
+
+**Incoming webhook payload:**
+```json
+{
+  "email": "alice@example.com",
+  "name": "Alice Johnson",
+  "plan": "Pro"
+}
+```
+
+**Templates:**
+- Title: `New {{body.plan}} signup`
+- Message: `{{body.name}} ({{body.email}}) just joined`
+
+**Rendered result:**
+- Title: `New Pro signup`
+- Message: `Alice Johnson (alice@example.com) just joined`
+
+---
+
+### Example 2: Payment Transaction
+
+**Incoming webhook payload:**
+```json
+{
+  "transaction_id": "TXN-12345",
+  "amount": "99.99",
+  "currency": "USD",
+  "customer": "Acme Corp",
+  "status": "success"
+}
+```
+
+**Templates:**
+- Title: `💰 Payment {{body.status}}`
+- Message: `${{body.amount}} {{body.currency}} from {{body.customer}} (ID: {{body.transaction_id}})`
+
+**Rendered result:**
+- Title: `💰 Payment success`
+- Message: `$99.99 USD from Acme Corp (ID: TXN-12345)`
+
+---
+
+### Example 3: Order Status Update
+
+**Incoming webhook payload:**
+```json
+{
+  "order_id": "ORD-56789",
+  "items": [
+    {"name": "Widget", "qty": 2},
+    {"name": "Gadget", "qty": 1}
+  ],
+  "status": "shipped",
+  "tracking": "TRACK-XYZABC"
+}
+```
+
+**Templates:**
+- Title: `Order {{body.order_id}} {{body.status}}`
+- Message: `Tracking: {{body.items.0.name}} and {{body.items.1.name}} - {{body.tracking}}`
+
+**Rendered result:**
+- Title: `Order ORD-56789 shipped`
+- Message: `Tracking: Widget and Gadget - TRACK-XYZABC`
+
+---
+
+### Example 4: Error Alert
+
+**Incoming webhook payload:**
+```json
+{
+  "error_code": "DB_TIMEOUT",
+  "service": "user-service",
+  "timestamp": "2025-01-30T14:35:22Z",
+  "function": "getUserData"
+}
+```
+
+**Templates:**
+- Title: `⚠️ {{body.service}} Error`
+- Message: `{{body.error_code}} in {{body.function}} at {{body.timestamp}}`
+
+**Rendered result:**
+- Title: `⚠️ user-service Error`
+- Message: `DB_TIMEOUT in getUserData at 2025-01-30T14:35:22Z`
+
+---
+
+## Handling Missing or Empty Values
+
+Use the `default` helper to safely handle missing, null, or empty data with fallback values:
+
+**Syntax:** `{{default path "fallback_value"}}`
+
+### What Triggers Fallback
+
+The fallback is used if the value is:
+- `undefined` (field doesn't exist)
+- `null`
+- Empty string (`""`)
+- Zero (`0`)
+- Empty array (`[]`)
+- `false`
+
+### Examples with Payloads
+
+**Scenario 1: Optional field is missing**
+
+Payload:
+```json
+{
+  "customer": "John",
+  "email": null
+}
+```
+
+Template: `{{default body.email "No email provided"}}`
+
+Result: `No email provided`
+
+---
+
+**Scenario 2: Required field is present**
+
+Payload:
+```json
+{
+  "status": "active",
+  "plan": "Pro"
+}
+```
+
+Template: `Status: {{default body.status "Inactive"}}`
+
+Result: `Status: active`
+
+---
+
+**Scenario 3: Zero is a valid value**
+
+Payload:
+```json
+{
+  "retries": 0,
+  "attempts": 5
+}
+```
+
+Template: `Retries: {{default body.retries "5"}} / Attempts: {{body.attempts}}`
+
+Result: `Retries: 5 / Attempts: 5` (zero is falsy, so fallback "5" is used)
+
+---
+
+## Advanced Features
+
+### Conditionals
+
+Display content based on conditions:
+
+```
+{{#if body.success}}
+✅ Operation completed successfully
+{{else}}
+❌ Operation failed
+{{/if}}
+```
+
+### Loops
+
+Iterate over array items:
+
+```
+{{#each body.items}}
+- {{this.name}} ({{this.quantity}})
+{{/each}}
+```
+
+### Comments
+
+Add comments that won't render:
+
+```
+{{! This is a comment and won't appear in the message }}
+```
+
+For more advanced Handlebars features, see the [Handlebars language documentation](https://handlebarsjs.com/guide/#language-features).
+
+---
+
+## HTML Escaping & Security
+
+### Default Escaping
+
+By default, Handlebars escapes HTML special characters (`<`, `>`, `&`, etc.) to prevent injection attacks:
+
+```
+Payload: {"text": "<script>alert('xss')</script>"}
+Template: {{body.text}}
+Result: &lt;script&gt;alert('xss')&lt;/script&gt;
+```
+
+---
+
+## System Limitations
+
+- **Data window:** Variables are only available from events received in the last 7 days
+- **Private webhooks:** Event data is not stored on servers, so the variable picker can't display available fields (but you can still type paths manually)
+- **Render failures:** If a template fails to render due to syntax errors, the original unprocessed template is returned as a fallback
