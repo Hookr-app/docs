@@ -12,6 +12,21 @@ API keys are used for private integrations with third-party tools like Make and 
 - Download the iOS or Android app
 - Log in to your Hookr account
 
+## UI integration setup
+
+Use these fields when you configure Hookr in a UI-based integration.
+
+### Parameters
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| Title | Required | One-line title shown at the top of the notification. |
+| Message | Required | Multiline notification text. |
+| Action URL | Optional | URL to open when the notification is tapped. |
+| Time Sensitive | Optional | Whether the notification is time sensitive. This affects push notification priority and time sensitive status. See [Time Sensitive Notifications](features/time-sensitive). |
+
+Note: Title, Message, and Action URL can be mapped from data in previous nodes.
+
 ## How to obtain an API key
 
 1. Open the Hookr app.
