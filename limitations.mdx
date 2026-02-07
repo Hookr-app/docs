@@ -19,6 +19,8 @@ If you exceed this limit, the webhook will be rejected and won't be processed.
 
 Each individual webhook can be triggered up to 10 times per minute. This is an individual rate limit — each webhook has its own separate 10-request allowance. After that, additional requests to that specific webhook will be blocked until the minute resets.
 
+API keys for integrations are treated as a single webhook for rate limiting. Push notification invocations made with an API key are limited to 10 requests per minute.
+
 ### Rate Limit Response
 
 When you exceed the rate limit, you'll receive:
@@ -121,6 +123,7 @@ Values in your webhook are automatically cleaned for safety and compatibility:
 |-------|-------|
 | **Maximum payload size** | 1 MB |
 | **Rate limit** | 10 requests/minute |
+| **API key rate limit** | 10 requests/minute |
 | **Maximum retries** | 5 attempts |
 | **Base credit cost** | 1 credit |
 | **Cost per forward destination** | +1 credit |
@@ -132,7 +135,7 @@ Values in your webhook are automatically cleaned for safety and compatibility:
 
 ### Getting 429 error?
 
-You're sending too many webhooks. Wait for the next minute window to send additional requests. Space out your webhook triggers to no more than 10 per minute.
+You're sending too many webhooks or API key requests. Wait for the next minute window to send additional requests. Space out your webhook triggers to no more than 10 per minute.
 
 ### Webhook was queued but nothing happened?
 

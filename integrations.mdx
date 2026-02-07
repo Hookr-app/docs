@@ -1,0 +1,37 @@
+---
+title: "Integrations (API Keys)"
+description: "Create a private API key to connect Hookr with third-party tools like Make and n8n."
+---
+
+## Overview
+
+API keys are used for private integrations with third-party tools like Make and n8n. This private API is not intended for public use without a supported integration. You can use it directly if you understand the implications, but it is designed for trusted workflows.
+
+## Prerequisites
+
+- Download the iOS or Android app
+- Log in to your Hookr account
+
+## How to obtain an API key
+
+1. Open the Hookr app.
+2. Log in to your account.
+3. Navigate to the Settings tab and scroll down to the API Keys section.
+4. Press the "Create API Key" button.
+5. Tap the API key to copy it.
+
+## Resetting an API key
+
+You can rotate or reset your API key from the same API Keys section. Press "Reset API Key" to generate a new key. Your old key stops working immediately, so update every integration that used the previous key.
+
+## Use cases
+
+**Basic**
+- Connect Hookr to Make or n8n to trigger push notifications from your workflows.
+
+**Advanced**
+- Use the API key in a private, authenticated automation flow to post sensitive events while keeping the integration scoped to trusted tools.
+
+## Rate limits
+
+Each API key is treated as a single webhook for rate limiting. Push notification invocations made with an API key are limited to 10 requests per minute.
