@@ -4,7 +4,7 @@ description: "Forward Hookr workflow events to telemetry.sh and query stage-comp
 ---
 
 <Note>
-  This is a community example contributed by the telemetry.sh team. It has been
+  This is a community example contributed by JR, founder of Telemetry. It has been
   tested locally only - it has not been deployed or exercised against the hosted
   services, and it is not an official or natively supported Hookr integration.
   Review the code and run it in a dedicated test workspace before relying on it.
@@ -24,8 +24,9 @@ still shows individual events and forwarding results; telemetry.sh adds an aggre
 
 A small adapter service sits between Hookr and telemetry.sh:
 
-1. Your application sends a workflow event to a Hookr webhook.
-2. Hookr forwards the raw payload to the adapter, signed with `X-Hookr-Signature`.
+1. Your application sends the workflow event as JSON by `POST` to a Hookr webhook.
+2. Hookr preserves the original method and forwards the raw payload to the adapter, signed with
+   `X-Hookr-Signature`. The adapter accepts only `POST` and rejects anything else.
 3. The adapter verifies the signature, validates the event, and forwards only the allowed
    fields to the telemetry.sh Log API.
 4. You query the resulting table to analyze stage completions across runs.
@@ -79,7 +80,8 @@ Only these five fields are forwarded onward. Everything else in the payload is d
     - `HOOKR_ADAPTER_PORT` - optional, defaults to `8080`
   </Step>
   <Step title="Run the adapter">
-    Start the adapter service:
+    Get the adapter code from the [source package](https://gist.github.com/TheBuilderJR/8a3be701daa53a6af622d206033326a8),
+    then start the [`server.mjs`](https://gist.github.com/TheBuilderJR/8a3be701daa53a6af622d206033326a8#file-server-mjs) entry point:
 
     ```bash
     node server.mjs
@@ -113,7 +115,7 @@ storage or immediate query visibility. Upstream failure or timeout returns an em
 
 ## Analyzing results
 
-The example includes an analysis query that collapses repeated event IDs, excludes conflicting
+The example includes an [analysis query](https://gist.github.com/TheBuilderJR/8a3be701daa53a6af622d206033326a8#file-analysis-sql) that collapses repeated event IDs, excludes conflicting
 IDs, and groups recorded completions by `stage` and `outcome` with an average duration. Note that
 it measures recorded completions only - a run without a completion event is absent, so the result
 is not a workflow success rate.
