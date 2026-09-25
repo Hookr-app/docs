@@ -15,7 +15,7 @@
         "groups": [
           {
             "group": "Getting started",
-            "pages": ["index", "pricing", "limitations", "integrations"]
+            "pages": ["index", "pricing", "limitations"]
           },
           {
             "group": "Essentials",
@@ -33,6 +33,10 @@
               "features/time-sensitive",
               "features/handlebars"
             ]
+          },
+          {
+            "group": "Integrations",
+            "pages": ["integrations/api-keys", "integrations/telemetry"]
           },
           {
             "group": "Use Cases",
@@ -72,6 +76,12 @@
       }
     ]
   },
+  "redirects": [
+    {
+      "source": "/integrations",
+      "destination": "/integrations/api-keys"
+    }
+  ],
   "contextual": {
     "options": ["copy", "view", "chatgpt", "claude", "perplexity"]
   },
